@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+  </head>
+<body class="bg-light">
+    <div class="container py-5">
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <h1 class="text-center mb-4">RSS Агрегатор</h1>
+
+          <form class="rss-form" autocomplete="off">
+            <div class="input-group">
+              <input
+                type="text"
+                name="url"
+                class="form-control"
+                placeholder="Ссылка RSS"
+                aria-label="Ссылка RSS"
+                required
+              />
+              <button type="submit" class="btn btn-primary">
+                Добавить
+              </button>
+            </div>
+          </form>
+
+          <p class="feedback text-danger mt-2 small"></p>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
