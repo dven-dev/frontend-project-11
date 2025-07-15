@@ -1,71 +1,76 @@
 import * as yup from 'yup';
 import onChange from 'on-change';
+import axios from 'axios';
+import { uniqueId } from 'lodash';
+import initI18n from './i18n.js';
+import render from './view.js';
+import parseRSS from './parser.js';
 
-const validate = (url, urls) => {
-  const schema = yup
-    .string()
-    .url()
-    .notOneOf(urls)
-    .required();
+const getElements = () => ({
+  form: document.querySelector('.rss-form'),
+  input: document.querySelector('input[name="url"]'),
+  feedback: document.querySelector('.feedback'),
+  feeds: document.querySelector('.feeds'),
+  posts: document.querySelector('.posts'),
+});
 
-  return schema.validate(url);
-};
+const buildSchema = (urls) => yup.string().required().url().notOneOf(urls);
 
-const render = (path, value) => {
-  const input = document.querySelector('input[name="url"]');
-  const feedback = document.querySelector('.feedback');
+export default async () => {
+  const i18n = await initI18n();
+  const elements = getElements();
 
-  if (path === 'form.valid') {
-    if (value) {
-      input.classList.remove('is-invalid');
-      feedback.textContent = '';
-    } else {
-      input.classList.add('is-invalid');
-    }
-  }
-
-  if (path === 'form.error') {
-    feedback.textContent = window.i18next.t(`feedback.errors.${value}`);
-  }
-
-  if (path === 'form.status' && value === 'finished') {
-    input.value = '';
-    input.focus();
-  }
-};
-
-export default () => {
   const state = {
     form: {
       valid: true,
-      error: null, // error code: 'url', 'required' и т.д.
+      error: null,
       status: 'filling',
     },
     urls: [],
+    feeds: [],
+    posts: [],
   };
 
-  const watchedState = onChange(state, render);
+  const watchedState = onChange(state, render(state, elements));
 
-  const form = document.querySelector('.rss-form');
-  const input = form.querySelector('input');
-
-  form.addEventListener('submit', (e) => {
+  elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const url = formData.get('url').trim();
 
     watchedState.form.status = 'sending';
-    validate(url, watchedState.urls)
-      .then(() => {
-        watchedState.form.valid = true;
+
+    buildSchema(watchedState.urls)
+      .validate(url)
+      .then(() => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`))
+      .then((response) => {
+        const { feed, posts } = parseRSS(response.data.contents);
+        const feedId = uniqueId('feed_');
+        const postsWithId = posts.map((post) => ({
+          ...post,
+          id: uniqueId('post_'),
+          feedId,
+        }));
+
         watchedState.urls.push(url);
+        watchedState.feeds.push({ ...feed, id: feedId });
+        watchedState.posts.push(...postsWithId);
+
+        watchedState.form.valid = true;
         watchedState.form.status = 'finished';
         watchedState.form.error = null;
       })
-      .catch((error) => {
+      .catch((err) => {
         watchedState.form.valid = false;
-        watchedState.form.error = error.type || 'unknown';
         watchedState.form.status = 'filling';
+
+        if (err.isParsingError) {
+          watchedState.form.error = i18n.t('feedback.errors.invalidRss');
+        } else if (err.name === 'ValidationError') {
+          watchedState.form.error = err.message;
+        } else {
+          watchedState.form.error = i18n.t('feedback.errors.network');
+        }
       });
   });
 };

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -7,12 +7,13 @@
     <title>RSS Агрегатор</title>
   </head>
   <body class="bg-light">
-    <div class="container py-5">
+    <div class="container-fluid container-xxl py-5">
       <div class="row justify-content-center">
-        <div class="col-md-8">
-          <h1 class="text-center mb-4">RSS Агрегатор</h1>
-          
-          <form class="rss-form text-body" autocomplete="off">
+        <div class="col-md-10 col-lg-8 col-xxl-6">
+          <h1 class="display-4 mb-4 text-center">RSS агрегатор</h1>
+          <p class="lead text-center">Начните читать RSS сегодня! Это легко, это красиво.</p>
+
+          <form class="rss-form mb-4" autocomplete="off">
             <div class="row">
               <div class="col">
                 <input
@@ -23,15 +24,20 @@
                   placeholder="Ссылка RSS"
                   aria-label="url"
                 />
-                <div class="feedback text-danger"></div>
               </div>
               <div class="col-auto">
                 <button type="submit" class="btn btn-primary">Добавить</button>
               </div>
             </div>
+            <p class="feedback text-danger mt-2 mb-0 small"></p>
           </form>
+        </div>
+      </div>
 
-          <p class="feedback text-danger mt-2 small"></p>
+      <div class="row">
+        <div class="col-md-10 col-lg-8 col-xxl-6 mx-auto">
+          <div class="feeds"></div>
+          <div class="posts mt-4"></div>
         </div>
       </div>
     </div>
