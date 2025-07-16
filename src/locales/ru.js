@@ -17,6 +17,8 @@ export default {
         invalidRss: 'Ресурс не содержит валидный RSS',
       },
     },
+    buttons: {
+      preview: 'Просмотр',
+    },
   },
 };
-

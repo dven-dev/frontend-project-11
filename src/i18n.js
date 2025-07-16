@@ -1,6 +1,6 @@
 import i18next from 'i18next';
-import ru from './locales/ru.js';
 import * as yup from 'yup';
+import ru from './locales/ru';
 
 const initI18n = async () => {
   const i18n = i18next.createInstance();

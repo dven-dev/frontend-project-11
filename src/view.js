@@ -1,4 +1,3 @@
-import i18n from './i18n.js';
 import { Modal } from 'bootstrap';
 
 const renderFeedback = (elements, { valid, error }) => {
@@ -20,7 +19,8 @@ const renderFormStatus = (elements, status) => {
   }
 };
 
-const renderFeeds = (feeds, container) => {
+const renderFeeds = (feeds, containerElement) => {
+  const container = containerElement;
   container.innerHTML = '';
 
   const card = document.createElement('div');
@@ -28,14 +28,17 @@ const renderFeeds = (feeds, container) => {
 
   const cardBody = document.createElement('div');
   cardBody.classList.add('card-body');
+
   const cardTitle = document.createElement('h2');
   cardTitle.classList.add('card-title', 'h4');
   cardTitle.textContent = 'Фиды';
+
   cardBody.appendChild(cardTitle);
   card.appendChild(cardBody);
 
   const list = document.createElement('ul');
   list.classList.add('list-group', 'border-0', 'rounded-0');
+
   feeds.forEach(({ title, description }) => {
     const item = document.createElement('li');
     item.classList.add('list-group-item', 'border-0', 'border-end-0');
@@ -56,7 +59,8 @@ const renderFeeds = (feeds, container) => {
   container.appendChild(card);
 };
 
-const renderPosts = (posts, container, state) => {
+const renderPosts = (posts, containerElement, state) => {
+  const container = containerElement;
   container.innerHTML = '';
 
   const card = document.createElement('div');
@@ -64,25 +68,34 @@ const renderPosts = (posts, container, state) => {
 
   const cardBody = document.createElement('div');
   cardBody.classList.add('card-body');
+
   const cardTitle = document.createElement('h2');
   cardTitle.classList.add('card-title', 'h4');
   cardTitle.textContent = 'Посты';
+
   cardBody.appendChild(cardTitle);
   card.appendChild(cardBody);
 
   const list = document.createElement('ul');
   list.classList.add('list-group', 'border-0', 'rounded-0');
 
-  posts.forEach(({ id, title, link, description }) => {
+  posts.forEach(({ id, title, link }) => {
     const item = document.createElement('li');
-    item.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+    item.classList.add(
+      'list-group-item',
+      'd-flex',
+      'justify-content-between',
+      'align-items-start',
+      'border-0',
+      'border-end-0',
+    );
 
     const postLink = document.createElement('a');
     postLink.setAttribute('href', link);
     postLink.setAttribute('target', '_blank');
     postLink.setAttribute('rel', 'noopener noreferrer');
     postLink.textContent = title;
-  
+
     if (state.readPosts && state.readPosts.has(id)) {
       postLink.classList.add('fw-normal');
     } else {
@@ -104,7 +117,7 @@ const renderPosts = (posts, container, state) => {
 };
 
 const showModal = (title, description) => {
-  const modalTitle = document.getElementById('.modal-title');
+  const modalTitle = document.querySelector('.modal-title');
   const modalBody = document.querySelector('.modal-body');
 
   modalTitle.textContent = title;
@@ -135,17 +148,14 @@ export default (state, elements) => (path, value) => {
 
       elements.posts.querySelectorAll('button').forEach((btn) => {
         btn.addEventListener('click', (e) => {
-          const postId = e.target.dataset.id;
+          const { id: postId } = e.target.dataset;
           const post = state.posts.find((p) => p.id === postId);
           if (!post) return;
 
-          if (!state.readPosts) {
-            state.readPosts = new Set();
-          }
-          state.readPosts.add(postId);
+          const newReadPosts = new Set(state.readPosts || []);
+          newReadPosts.add(postId);
 
-          renderPosts(state.posts, elements.posts, state);
-
+          renderPosts(state.posts, elements.posts, { ...state, readPosts: newReadPosts });
           showModal(post.title, post.description);
         });
       });

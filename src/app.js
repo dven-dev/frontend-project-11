@@ -1,11 +1,11 @@
+import { Modal } from 'bootstrap';
 import * as yup from 'yup';
 import onChange from 'on-change';
 import axios from 'axios';
 import { uniqueId } from 'lodash';
-import initI18n from './i18n.js';
-import render from './view.js';
-import parseRSS from './parser.js';
-import { Modal } from 'bootstrap';
+import initI18n from './i18n';
+import render from './view';
+import parseRSS from './parser';
 
 const getElements = () => ({
   form: document.querySelector('.rss-form'),
@@ -18,6 +18,41 @@ const getElements = () => ({
 });
 
 const buildSchema = (urls) => yup.string().required().url().notOneOf(urls);
+
+function checkForUpdates(state) {
+  const { feeds, posts } = state;
+
+  const promises = feeds.map((feed) => {
+    const { url } = feed;
+    const proxyUrl = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`;
+
+    return axios.get(proxyUrl)
+      .then((response) => {
+        const { posts: newPosts } = parseRSS(response.data.contents);
+        const existingLinks = posts.map((post) => post.link);
+
+        const freshPosts = newPosts
+          .filter((post) => !existingLinks.includes(post.link))
+          .map((post) => ({
+            ...post,
+            id: uniqueId('post_'),
+            feedId: feed.id,
+          }));
+
+        if (freshPosts.length > 0) {
+          state.posts.push(...freshPosts);
+        }
+      });
+  });
+
+  Promise.all(promises)
+    .catch((err) => {
+      console.error('Ошибка при обновлении одного из фидов:', err.message);
+    })
+    .finally(() => {
+      setTimeout(() => checkForUpdates(state), 5000);
+    });
+}
 
 export default async () => {
   const i18n = await initI18n();
@@ -46,9 +81,7 @@ export default async () => {
 
     buildSchema(watchedState.urls)
       .validate(url)
-      .then(() =>
-        axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
-      )
+      .then(() => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`))
       .then((response) => {
         const { feed, posts } = parseRSS(response.data.contents);
         const feedId = uniqueId('feed_');
@@ -86,7 +119,7 @@ export default async () => {
 
   elements.posts.addEventListener('click', (e) => {
     if (e.target.tagName === 'BUTTON' && e.target.dataset.postId) {
-      const postId = e.target.dataset.postId;
+      const { postId } = e.target.dataset;
 
       watchedState.readPosts.add(postId);
 
@@ -100,38 +133,4 @@ export default async () => {
       modal.show();
     }
   });
-
-  const checkForUpdates = (watchedState) => {
-    const { feeds, posts } = watchedState;
-
-    const promises = feeds.map((feed) => {
-      const url = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(feed.url)}`;
-
-      return axios.get(url)
-        .then((response) => {
-          const { posts: newPosts } = parseRSS(response.data.contents);
-
-          const existingLinks = posts.map((post) => post.link);
-          const freshPosts = newPosts
-            .filter((post) => !existingLinks.includes(post.link))
-            .map((post) => ({
-              ...post,
-              id: uniqueId('post_'),
-              feedId: feed.id,
-            }));
-
-          if (freshPosts.length > 0) {
-            watchedState.posts.push(...freshPosts);
-          }
-        });
-    });
-
-    Promise.all(promises)
-      .catch((err) => {
-        console.error('Ошибка при обновлении одного из фидов:', err.message);
-      })
-      .finally(() => {
-        setTimeout(() => checkForUpdates(watchedState), 5000);
-      });
-  };
 };
