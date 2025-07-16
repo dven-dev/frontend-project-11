@@ -96,7 +96,7 @@ export default async () => {
       elements.modalTitle.textContent = post.title;
       elements.modalBody.textContent = post.description;
 
-      const modal = new bootstrap.Modal(document.getElementById('modal'));
+      const modal = new Modal(document.getElementById('modal'));
       modal.show();
     }
   });

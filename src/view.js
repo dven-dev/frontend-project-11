@@ -104,14 +104,14 @@ const renderPosts = (posts, container, state) => {
 };
 
 const showModal = (title, description) => {
-  const modalTitle = document.getElementById('modalLabel');
+  const modalTitle = document.getElementById('.modal-title');
   const modalBody = document.querySelector('.modal-body');
 
   modalTitle.textContent = title;
   modalBody.textContent = description;
 
   const modalElement = document.getElementById('modal');
-  const modal = new bootstrap.Modal(modalElement);
+  const modal = new Modal(modalElement);
   modal.show();
 };
 
