@@ -5,6 +5,7 @@ import { uniqueId } from 'lodash';
 import initI18n from './i18n.js';
 import render from './view.js';
 import parseRSS from './parser.js';
+import { Modal } from 'bootstrap';
 
 const getElements = () => ({
   form: document.querySelector('.rss-form'),
@@ -12,6 +13,8 @@ const getElements = () => ({
   feedback: document.querySelector('.feedback'),
   feeds: document.querySelector('.feeds'),
   posts: document.querySelector('.posts'),
+  modalTitle: document.querySelector('#modal .modal-title'),
+  modalBody: document.querySelector('#modal .modal-body'),
 });
 
 const buildSchema = (urls) => yup.string().required().url().notOneOf(urls);
@@ -29,6 +32,7 @@ export default async () => {
     urls: [],
     feeds: [],
     posts: [],
+    readPosts: new Set(),
   };
 
   const watchedState = onChange(state, render(state, elements));
@@ -42,7 +46,7 @@ export default async () => {
 
     buildSchema(watchedState.urls)
       .validate(url)
-      .then(() => 
+      .then(() =>
         axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
       )
       .then((response) => {
@@ -62,7 +66,6 @@ export default async () => {
         watchedState.form.status = 'finished';
         watchedState.form.error = null;
 
-       
         if (watchedState.feeds.length === 1) {
           checkForUpdates(watchedState);
         }
@@ -79,6 +82,23 @@ export default async () => {
           watchedState.form.error = i18n.t('feedback.errors.network');
         }
       });
+  });
+
+  elements.posts.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON' && e.target.dataset.postId) {
+      const postId = e.target.dataset.postId;
+
+      watchedState.readPosts.add(postId);
+
+      const post = watchedState.posts.find((p) => p.id === postId);
+      if (!post) return;
+
+      elements.modalTitle.textContent = post.title;
+      elements.modalBody.textContent = post.description;
+
+      const modal = new bootstrap.Modal(document.getElementById('modal'));
+      modal.show();
+    }
   });
 
   const checkForUpdates = (watchedState) => {

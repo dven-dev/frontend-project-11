@@ -1,4 +1,5 @@
 import i18n from './i18n.js';
+import { Modal } from 'bootstrap';
 
 const renderFeedback = (elements, { valid, error }) => {
   const { input, feedback } = elements;
@@ -55,7 +56,7 @@ const renderFeeds = (feeds, container) => {
   container.appendChild(card);
 };
 
-const renderPosts = (posts, container) => {
+const renderPosts = (posts, container, state) => {
   container.innerHTML = '';
 
   const card = document.createElement('div');
@@ -71,23 +72,47 @@ const renderPosts = (posts, container) => {
 
   const list = document.createElement('ul');
   list.classList.add('list-group', 'border-0', 'rounded-0');
-  posts.forEach(({ title, link }) => {
+
+  posts.forEach(({ id, title, link, description }) => {
     const item = document.createElement('li');
     item.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
 
     const postLink = document.createElement('a');
     postLink.setAttribute('href', link);
-    postLink.classList.add('fw-bold');
     postLink.setAttribute('target', '_blank');
     postLink.setAttribute('rel', 'noopener noreferrer');
     postLink.textContent = title;
+  
+    if (state.readPosts && state.readPosts.has(id)) {
+      postLink.classList.add('fw-normal');
+    } else {
+      postLink.classList.add('fw-bold');
+    }
 
-    item.appendChild(postLink);
+    const previewBtn = document.createElement('button');
+    previewBtn.type = 'button';
+    previewBtn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    previewBtn.textContent = 'Просмотр';
+    previewBtn.dataset.id = id;
+
+    item.append(postLink, previewBtn);
     list.appendChild(item);
   });
 
   card.appendChild(list);
   container.appendChild(card);
+};
+
+const showModal = (title, description) => {
+  const modalTitle = document.getElementById('modalLabel');
+  const modalBody = document.querySelector('.modal-body');
+
+  modalTitle.textContent = title;
+  modalBody.textContent = description;
+
+  const modalElement = document.getElementById('modal');
+  const modal = new bootstrap.Modal(modalElement);
+  modal.show();
 };
 
 export default (state, elements) => (path, value) => {
@@ -106,7 +131,25 @@ export default (state, elements) => (path, value) => {
       break;
 
     case 'posts':
-      renderPosts(value, elements.posts);
+      renderPosts(value, elements.posts, state);
+
+      elements.posts.querySelectorAll('button').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const postId = e.target.dataset.id;
+          const post = state.posts.find((p) => p.id === postId);
+          if (!post) return;
+
+          if (!state.readPosts) {
+            state.readPosts = new Set();
+          }
+          state.readPosts.add(postId);
+
+          renderPosts(state.posts, elements.posts, state);
+
+          showModal(post.title, post.description);
+        });
+      });
+
       break;
 
     default:
