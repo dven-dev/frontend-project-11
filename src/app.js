@@ -42,7 +42,9 @@ export default async () => {
 
     buildSchema(watchedState.urls)
       .validate(url)
-      .then(() => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`))
+      .then(() => 
+        axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
+      )
       .then((response) => {
         const { feed, posts } = parseRSS(response.data.contents);
         const feedId = uniqueId('feed_');
@@ -53,12 +55,17 @@ export default async () => {
         }));
 
         watchedState.urls.push(url);
-        watchedState.feeds.push({ ...feed, id: feedId });
+        watchedState.feeds.push({ ...feed, id: feedId, url });
         watchedState.posts.push(...postsWithId);
 
         watchedState.form.valid = true;
         watchedState.form.status = 'finished';
         watchedState.form.error = null;
+
+       
+        if (watchedState.feeds.length === 1) {
+          checkForUpdates(watchedState);
+        }
       })
       .catch((err) => {
         watchedState.form.valid = false;
@@ -73,4 +80,38 @@ export default async () => {
         }
       });
   });
+
+  const checkForUpdates = (watchedState) => {
+    const { feeds, posts } = watchedState;
+
+    const promises = feeds.map((feed) => {
+      const url = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(feed.url)}`;
+
+      return axios.get(url)
+        .then((response) => {
+          const { posts: newPosts } = parseRSS(response.data.contents);
+
+          const existingLinks = posts.map((post) => post.link);
+          const freshPosts = newPosts
+            .filter((post) => !existingLinks.includes(post.link))
+            .map((post) => ({
+              ...post,
+              id: uniqueId('post_'),
+              feedId: feed.id,
+            }));
+
+          if (freshPosts.length > 0) {
+            watchedState.posts.push(...freshPosts);
+          }
+        });
+    });
+
+    Promise.all(promises)
+      .catch((err) => {
+        console.error('Ошибка при обновлении одного из фидов:', err.message);
+      })
+      .finally(() => {
+        setTimeout(() => checkForUpdates(watchedState), 5000);
+      });
+  };
 };
