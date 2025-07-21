@@ -158,7 +158,7 @@ const renderPosts = (state, elements) => {
 export default (state, elements) => (path, value) => {
   switch (path) {
     case 'form.valid'
-    case 'form.error'
+    case 'form.error':
       renderFeedback(elements, state.form);
       break;
 
