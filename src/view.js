@@ -6,6 +6,7 @@ const renderFeedback = (elements, { valid, error }) => {
   if (valid) {
     input.classList.remove('is-invalid');
     feedback.classList.remove('text-danger');
+    feedback.classList.add('text-success');
     feedback.textContent = '';
   } else {
     input.classList.add('is-invalid');
@@ -68,7 +69,7 @@ const renderFeeds = (feeds, containerElement) => {
   container.appendChild(card);
 };
 
-const renderPosts = (posts, containerElement, state) => {
+const renderPosts = (posts, containerElement, state, handlePreviewClick) => {
   const container = containerElement;
   container.innerHTML = '';
 
@@ -105,8 +106,8 @@ const renderPosts = (posts, containerElement, state) => {
     postLink.setAttribute('rel', 'noopener noreferrer');
     postLink.textContent = title;
 
-    if (state.readPosts && state.readPosts.has(id)) {
-      postLink.classList.add('fw-normal');
+    if (state.readPosts.has(id)) {
+      postLink.classList.add('fw-normal', 'link-secondary');
     } else {
       postLink.classList.add('fw-bold');
     }
@@ -116,6 +117,8 @@ const renderPosts = (posts, containerElement, state) => {
     previewBtn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
     previewBtn.textContent = 'Просмотр';
     previewBtn.dataset.id = id;
+
+    previewBtn.addEventListener('click', () => handlePreviewClick(id));
 
     item.append(postLink, previewBtn);
     list.appendChild(item);
@@ -153,22 +156,22 @@ export default (state, elements) => (path, value) => {
       break;
 
     case 'posts':
-      renderPosts(value, elements.posts, state);
+      renderPosts(value, elements.posts, state, (postId) => {
+        const post = state.posts.find((p) => p.id === postId);
+        if (!post) return;
 
-      elements.posts.querySelectorAll('button').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
-          const { id: postId } = e.target.dataset;
-          const post = state.posts.find((p) => p.id === postId);
-          if (!post) return;
-
-          const newReadPosts = new Set(state.readPosts || []);
-          newReadPosts.add(postId);
-
-          renderPosts(state.posts, elements.posts, { ...state, readPosts: newReadPosts });
-          showModal(post.title, post.description);
+        state.readPosts.add(postId);
+        renderPosts(state.posts, elements.posts, state, (id) => {
+          const p = state.posts.find((pp) => pp.id === id);
+          if (p) {
+            state.readPosts.add(id);
+            renderPosts(state.posts, elements.posts, state, arguments.callee);
+            showModal(p.title, p.description);
+          }
         });
-      });
 
+        showModal(post.title, post.description);
+      });
       break;
 
     default:
