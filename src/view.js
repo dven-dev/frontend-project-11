@@ -162,16 +162,16 @@ export default (state, elements) => (path, value) => {
       renderFeedback(elements, state.form);
       break;
 
-    case 'form.status'
+    case 'form.status':
       renderFormStatus(elements, value);
       break;
 
-    case 'feeds'
+    case 'feeds':
       renderFeeds(value, elements.feeds);
       break;
 
-    case 'posts'
-    case 'readPosts'
+    case 'posts':
+    case 'readPosts':
       renderPosts(state, elements);
       break;
 
