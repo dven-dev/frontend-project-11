@@ -22,7 +22,6 @@ const renderFormStatus = (elements, status) => {
   if (status === 'finished') {
     input.value = '';
     input.focus();
-
     feedback.classList.remove('text-danger');
     feedback.classList.add('text-success');
     feedback.textContent = 'RSS успешно загружен';
@@ -30,8 +29,7 @@ const renderFormStatus = (elements, status) => {
 };
 
 const renderFeeds = (feeds, containerElement) => {
-  const container = containerElement;
-  container.innerHTML = '';
+  containerElement.innerHTML = '';
 
   const card = document.createElement('div');
   card.classList.add('card', 'border-0');
@@ -39,11 +37,11 @@ const renderFeeds = (feeds, containerElement) => {
   const cardBody = document.createElement('div');
   cardBody.classList.add('card-body');
 
-  const cardTitle = document.createElement('h2');
-  cardTitle.classList.add('card-title', 'h4');
-  cardTitle.textContent = 'Фиды';
+  const title = document.createElement('h2');
+  title.classList.add('card-title', 'h4');
+  title.textContent = 'Фиды';
 
-  cardBody.appendChild(cardTitle);
+  cardBody.appendChild(title);
   card.appendChild(cardBody);
 
   const list = document.createElement('ul');
@@ -66,11 +64,25 @@ const renderFeeds = (feeds, containerElement) => {
   });
 
   card.appendChild(list);
-  container.appendChild(card);
+  containerElement.appendChild(card);
 };
 
-const renderPosts = (posts, containerElement, state, handlePreviewClick) => {
-  const container = containerElement;
+const showModal = (title, description, link) => {
+  const modalTitle = document.querySelector('.modal-title');
+  const modalBody = document.querySelector('.modal-body');
+  const modalLink = document.querySelector('.full-article');
+
+  modalTitle.textContent = title;
+  modalBody.textContent = description;
+  modalLink.href = link;
+
+  const modal = new Modal(document.getElementById('modal'));
+  modal.show();
+};
+
+const renderPosts = (state, elements) => {
+  const { posts } = state;
+  const container = elements.posts;
   container.innerHTML = '';
 
   const card = document.createElement('div');
@@ -79,11 +91,11 @@ const renderPosts = (posts, containerElement, state, handlePreviewClick) => {
   const cardBody = document.createElement('div');
   cardBody.classList.add('card-body');
 
-  const cardTitle = document.createElement('h2');
-  cardTitle.classList.add('card-title', 'h4');
-  cardTitle.textContent = 'Посты';
+  const title = document.createElement('h2');
+  title.classList.add('card-title', 'h4');
+  title.textContent = 'Посты';
 
-  cardBody.appendChild(cardTitle);
+  cardBody.appendChild(title);
   card.appendChild(cardBody);
 
   const list = document.createElement('ul');
@@ -97,13 +109,14 @@ const renderPosts = (posts, containerElement, state, handlePreviewClick) => {
       'justify-content-between',
       'align-items-start',
       'border-0',
-      'border-end-0',
+      'border-end-0'
     );
 
     const postLink = document.createElement('a');
     postLink.setAttribute('href', link);
     postLink.setAttribute('target', '_blank');
     postLink.setAttribute('rel', 'noopener noreferrer');
+    postLink.dataset.id = id;
     postLink.textContent = title;
 
     if (state.readPosts.has(id)) {
@@ -112,32 +125,32 @@ const renderPosts = (posts, containerElement, state, handlePreviewClick) => {
       postLink.classList.add('fw-bold');
     }
 
-    const previewBtn = document.createElement('button');
-    previewBtn.type = 'button';
-    previewBtn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-    previewBtn.textContent = 'Просмотр';
-    previewBtn.dataset.id = id;
+    postLink.addEventListener('click', () => {
+      state.readPosts.add(id);
+      renderPosts(state, elements);
+    });
 
-    previewBtn.addEventListener('click', () => handlePreviewClick(id));
+    const button = document.createElement('button');
+    button.setAttribute('type', 'button');
+    button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    button.dataset.id = id;
+    button.textContent = 'Просмотр';
 
-    item.append(postLink, previewBtn);
+    button.addEventListener('click', () => {
+      const post = state.posts.find((p) => p.id === id);
+      if (!post) return;
+
+      state.readPosts.add(id);
+      showModal(post.title, post.description, post.link);
+      renderPosts(state, elements);
+    });
+
+    item.append(postLink, button);
     list.appendChild(item);
   });
 
   card.appendChild(list);
   container.appendChild(card);
-};
-
-const showModal = (title, description) => {
-  const modalTitle = document.querySelector('.modal-title');
-  const modalBody = document.querySelector('.modal-body');
-
-  modalTitle.textContent = title;
-  modalBody.textContent = description;
-
-  const modalElement = document.getElementById('modal');
-  const modal = new Modal(modalElement);
-  modal.show();
 };
 
 export default (state, elements) => (path, value) => {
@@ -156,22 +169,8 @@ export default (state, elements) => (path, value) => {
       break;
 
     case 'posts':
-      renderPosts(value, elements.posts, state, (postId) => {
-        const post = state.posts.find((p) => p.id === postId);
-        if (!post) return;
-
-        state.readPosts.add(postId);
-        renderPosts(state.posts, elements.posts, state, (id) => {
-          const p = state.posts.find((pp) => pp.id === id);
-          if (p) {
-            state.readPosts.add(id);
-            renderPosts(state.posts, elements.posts, state, arguments.callee);
-            showModal(p.title, p.description);
-          }
-        });
-
-        showModal(post.title, post.description);
-      });
+    case 'readPosts':
+      renderPosts(state, elements);
       break;
 
     default:
