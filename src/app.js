@@ -109,15 +109,15 @@ export default async () => {
 
         if (err.isParsingError) {
           watchedState.form.error = i18n.t('feedback.errors.invalidRss')
-        } 
+        }
         else if (err.name === 'ValidationError') {
           watchedState.form.error = err.message
-        } 
+        }
         else {
           watchedState.form.error = i18n.t('feedback.errors.network')
         }
-      });
-  });
+      })
+  })
 
   elements.posts.addEventListener('click', (e) => {
     if (e.target.tagName === 'BUTTON' && e.target.dataset.postId) {
@@ -125,7 +125,7 @@ export default async () => {
 
       watchedState.readPosts.add(postId)
 
-      const post = watchedState.posts.find((p) => p.id === postId)
+      const post = watchedState.posts.find(p => p.id === postId)
       if (!post) return
 
       elements.modalTitle.textContent = post.title
@@ -135,4 +135,4 @@ export default async () => {
       modal.show()
     }
   })
-};
+}

@@ -8,7 +8,7 @@ const renderFeedback = (elements, { valid, error }) => {
     feedback.classList.remove('text-danger')
     feedback.classList.add('text-success')
     feedback.textContent = ''
-  } 
+  }
   else {
     input.classList.add('is-invalid')
     feedback.classList.remove('text-success')
@@ -66,7 +66,7 @@ const renderFeeds = (feeds, containerElement) => {
 
   card.appendChild(list)
   containerElement.appendChild(card)
-};
+}
 
 const showModal = (title, description, link) => {
   const modalTitle = document.querySelector('.modal-title')
@@ -122,7 +122,7 @@ const renderPosts = (state, elements) => {
 
     if (state.readPosts.has(id)) {
       postLink.classList.add('fw-normal', 'link-secondary')
-    } 
+    }
     else {
       postLink.classList.add('fw-bold')
     }
@@ -139,7 +139,7 @@ const renderPosts = (state, elements) => {
     button.textContent = 'Просмотр'
 
     button.addEventListener('click', () => {
-      const post = state.posts.find((p) => p.id === id)
+      const post = state.posts.find(p => p.id === id)
       if (!post) return
 
       state.readPosts.add(id)
@@ -153,29 +153,29 @@ const renderPosts = (state, elements) => {
 
   card.appendChild(list)
   container.appendChild(card)
-};
+}
 
 export default (state, elements) => (path, value) => {
   switch (path) {
     case 'form.valid':
     case 'form.error':
-      renderFeedback(elements, state.form);
-      break;
+      renderFeedback(elements, state.form)
+      break
 
     case 'form.status':
-      renderFormStatus(elements, value);
-      break;
+      renderFormStatus(elements, value)
+      break
 
     case 'feeds':
-      renderFeeds(value, elements.feeds);
-      break;
+      renderFeeds(value, elements.feeds)
+      break
 
     case 'posts':
     case 'readPosts':
-      renderPosts(state, elements);
-      break;
+      renderPosts(state, elements)
+      break
 
     default:
       break
   }
-};
+}
