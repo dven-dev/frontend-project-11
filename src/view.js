@@ -2,20 +2,29 @@ import { Modal } from 'bootstrap';
 
 const renderFeedback = (elements, { valid, error }) => {
   const { input, feedback } = elements;
+
   if (valid) {
     input.classList.remove('is-invalid');
+    feedback.classList.remove('text-danger');
     feedback.textContent = '';
   } else {
     input.classList.add('is-invalid');
+    feedback.classList.remove('text-success');
+    feedback.classList.add('text-danger');
     feedback.textContent = error;
   }
 };
 
 const renderFormStatus = (elements, status) => {
-  const { input } = elements;
+  const { input, feedback } = elements;
+
   if (status === 'finished') {
     input.value = '';
     input.focus();
+
+    feedback.classList.remove('text-danger');
+    feedback.classList.add('text-success');
+    feedback.textContent = 'RSS успешно загружен';
   }
 };
 
