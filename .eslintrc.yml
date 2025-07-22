@@ -4,7 +4,7 @@ env:
 
 extends:
   - airbnb-base
-  - plugin:@stylistic/js/recommended
+ #- plugin:@stylistic/js/recommended
 
 parserOptions:
   ecmaVersion: latest
