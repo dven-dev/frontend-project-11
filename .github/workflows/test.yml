@@ -5,23 +5,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-
-      
       - name: Clone the git repository code
         uses: actions/checkout@v4
 
-     
-      - name: setup nodejs
+      - name: Setup Node.js
         uses: actions/setup-node@v4
-      
-        
-      - name: Instal dependencies
+        with:
+          node-version: 20
+
+      - name: Install dependencies
         run: make install
 
-       
       - name: Run Eslint
         run: make lint
 
-       
       - name: Run tests
         run: make test
