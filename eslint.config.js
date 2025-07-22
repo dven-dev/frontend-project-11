@@ -1,4 +1,4 @@
-import js from '@stylistic/eslint-plugin-js';
+import js from '@stylistic/eslint-plugin-js'
 
 export default [
   {
@@ -15,4 +15,4 @@ export default [
       'no-console': 'off',
     },
   },
-];
+]
