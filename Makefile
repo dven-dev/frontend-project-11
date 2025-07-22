@@ -11,7 +11,7 @@ build:
 	NODE_ENV=production npm run build
 
 test:
-	echo no tests
+	npm test
 
 fix: 
 	npx eslint --fix .
