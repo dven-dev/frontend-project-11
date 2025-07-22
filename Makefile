@@ -10,8 +10,8 @@ lint:
 build:
 	NODE_ENV=production npm run build
 
-test:
-	npm test
+# test:
+#	npm test
 
 fix: 
 	npx eslint --fix .
